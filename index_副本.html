@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>儿童识字小报生成器</title>
+  <style>
+    :root {
+      --color-primary: #FF6B6B;
+      --color-secondary: #4ECDC4;
+      --color-accent: #FFE66D;
+      --color-background: #F7F9FC;
+      --color-card: #FFFFFF;
+      --color-text: #2D3436;
+      --color-text-light: #636E72;
+      --color-success: #00B894;
+      --color-error: #E17055;
+      --border-radius: 16px;
+      --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.12);
+      --spacing-xs: 8px;
+      --spacing-sm: 12px;
+      --spacing-md: 20px;
+      --spacing-lg: 32px;
+      --spacing-xl: 48px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+      background: var(--color-background);
+      color: var(--color-text);
+      min-height: 100vh;
+      padding: var(--spacing-md);
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: var(--spacing-lg);
+    }
+
+    .header h1 {
+      font-size: 28px;
+      color: var(--color-primary);
+      margin-bottom: var(--spacing-xs);
+    }
+
+    .header p {
+      color: var(--color-text-light);
+      font-size: 14px;
+    }
+
+    .card {
+      background: var(--color-card);
+      border-radius: var(--border-radius);
+      padding: var(--spacing-lg);
+      box-shadow: var(--shadow);
+      margin-bottom: var(--spacing-md);
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: var(--spacing-md);
+      color: var(--color-text);
+    }
+
+    .btn {
+      padding: var(--spacing-sm) var(--spacing-lg);
+      border-radius: var(--border-radius);
+      font-size: 16px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      min-height: 48px;
+    }
+
+    .btn-primary {
+      background: var(--color-primary);
+      color: white;
+      width: 100%;
+    }
+
+    .btn-primary:hover {
+      background: #ff5252;
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-hover);
+    }
+
+    .btn-primary:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .btn-secondary {
+      background: var(--color-secondary);
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background: #3dbdb5;
+    }
+
+    .input, .select {
+      width: 100%;
+      padding: var(--spacing-sm) var(--spacing-md);
+      border: 2px solid #E0E0E0;
+      border-radius: var(--border-radius);
+      font-size: 16px;
+      transition: border-color 0.2s;
+    }
+
+    .input:focus, .select:focus {
+      outline: none;
+      border-color: var(--color-primary);
+    }
+
+    .form-group {
+      margin-bottom: var(--spacing-md);
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: var(--spacing-xs);
+      font-weight: 500;
+      color: var(--color-text);
+    }
+
+    .api-key-section {
+      margin-bottom: var(--spacing-md);
+    }
+
+    .api-key-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      padding: var(--spacing-sm) 0;
+    }
+
+    .api-key-header h3 {
+      font-size: 14px;
+      color: var(--color-text-light);
+    }
+
+    .api-key-toggle {
+      font-size: 20px;
+      color: var(--color-text-light);
+      transition: transform 0.2s;
+    }
+
+    .api-key-toggle.collapsed {
+      transform: rotate(-90deg);
+    }
+
+    .api-key-content {
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+
+    .api-key-content.hidden {
+      max-height: 0;
+    }
+
+    .vocabulary-preview {
+      background: #f8f9fa;
+      border-radius: var(--border-radius);
+      padding: var(--spacing-md);
+      margin-top: var(--spacing-md);
+    }
+
+    .vocabulary-preview h4 {
+      font-size: 14px;
+      color: var(--color-text-light);
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .vocab-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--spacing-xs);
+    }
+
+    .vocab-tag {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      background: white;
+      border: 2px solid var(--color-accent);
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 13px;
+    }
+
+    .vocab-tag .pinyin {
+      color: var(--color-text-light);
+      font-size: 11px;
+    }
+
+    .vocab-tag .hanzi {
+      color: var(--color-text);
+      font-weight: 600;
+    }
+
+    .result-section {
+      text-align: center;
+    }
+
+    .result-image {
+      max-width: 100%;
+      border-radius: var(--border-radius);
+      margin-bottom: var(--spacing-md);
+    }
+
+    .result-actions {
+      display: flex;
+      gap: var(--spacing-sm);
+    }
+
+    .result-actions .btn {
+      flex: 1;
+    }
+
+    .loading-section {
+      text-align: center;
+      padding: var(--spacing-xl) 0;
+    }
+
+    .spinner {
+      width: 60px;
+      height: 60px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid var(--color-primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto var(--spacing-md);
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      color: var(--color-text-light);
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .loading-progress {
+      font-size: 14px;
+      color: var(--color-secondary);
+    }
+
+    .error-message {
+      background: #fff5f5;
+      border: 2px solid var(--color-error);
+      border-radius: var(--border-radius);
+      padding: var(--spacing-md);
+      color: var(--color-error);
+      text-align: center;
+      margin-bottom: var(--spacing-md);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .section-divider {
+      height: 1px;
+      background: #E0E0E0;
+      margin: var(--spacing-md) 0;
+    }
+
+    .prompt-preview {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: var(--spacing-md);
+      font-size: 12px;
+      color: var(--color-text-light);
+      white-space: pre-wrap;
+      max-height: 200px;
+      overflow-y: auto;
+      margin-top: var(--spacing-md);
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>儿童识字小报生成器</h1>
+      <p>选择主题，输入标题，一键生成趣味识字小报</p>
+    </div>
+
+    <!-- API Key Section -->
+    <div class="card">
+      <div class="api-key-section">
+        <div class="api-key-header" onclick="toggleApiKey()">
+          <h3>API Key 设置</h3>
+          <span class="api-key-toggle" id="apiKeyToggle">▼</span>
+        </div>
+        <div class="api-key-content" id="apiKeyContent">
+          <div class="form-group" style="margin-top: var(--spacing-md);">
+            <label for="apiKey">API Key</label>
+            <input type="password" id="apiKey" class="input" placeholder="输入您的 API Key">
+            <p style="font-size: 12px; color: var(--color-text-light); margin-top: 6px;">
+              获取地址: <a href="https://kie.ai/api-key" target="_blank">kie.ai/api-key</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Input Form -->
+    <div class="card" id="inputForm">
+      <div class="card-title">创建新小报</div>
+
+      <div class="form-group">
+        <label for="theme">主题/场景</label>
+        <select id="themeSelect" class="select" onchange="onThemeChange()">
+          <option value="">请选择主题...</option>
+          <option value="超市">超市</option>
+          <option value="医院">医院</option>
+          <option value="公园">公园</option>
+          <option value="学校">学校</option>
+          <option value="餐厅">餐厅</option>
+          <option value="游乐场">游乐场</option>
+          <option value="custom">自定义...</option>
+        </select>
+        <input type="text" id="themeCustom" class="input hidden" placeholder="输入自定义主题" style="margin-top: var(--spacing-sm);">
+      </div>
+
+      <div class="form-group">
+        <label for="title">小报标题</label>
+        <input type="text" id="titleInput" class="input" placeholder="例如：《走进超市》">
+      </div>
+
+      <!-- Vocabulary Preview -->
+      <div class="vocabulary-preview hidden" id="vocabPreview">
+        <h4>自动联想词汇（共 <span id="vocabCount">0</span> 个）</h4>
+        <div class="vocab-tags" id="vocabTags"></div>
+      </div>
+
+      <!-- Generated Prompt Preview -->
+      <div class="prompt-preview hidden" id="promptPreview">
+        <h4 style="margin-bottom: 8px; color: var(--color-text);">生成提示词预览</h4>
+        <pre id="promptText"></pre>
+      </div>
+
+      <button class="btn btn-primary" id="generateBtn" onclick="generateImage()">
+        生成图片
+      </button>
+    </div>
+
+    <!-- Loading State -->
+    <div class="card hidden" id="loadingSection">
+      <div class="loading-section">
+        <div class="spinner"></div>
+        <div class="loading-text">正在生成图片，请稍候...</div>
+        <div class="loading-progress" id="loadingProgress">等待中...</div>
+      </div>
+    </div>
+
+    <!-- Error State -->
+    <div class="error-message hidden" id="errorSection"></div>
+
+    <!-- Result Section -->
+    <div class="card hidden" id="resultSection">
+      <div class="card-title">生成完成!</div>
+      <div class="result-section">
+        <img id="resultImage" class="result-image" alt="生成的小报图片">
+        <div class="result-actions">
+          <button class="btn btn-secondary" onclick="downloadImage()">下载图片</button>
+          <button class="btn btn-primary" onclick="resetForm()">重新生成</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Vocabulary Database
+    const VOCABULARY_DATABASE = {
+      "超市": {
+        name: "超市",
+        words: [
+          { pinyin: "shōu yín yuán", hanzi: "收银员", category: "role" },
+          { pinyin: "gù kè", hanzi: "顾客", category: "role" },
+          { pinyin: "huò jià", hanzi: "货架", category: "facility" },
+          { pinyin: "shōu yín tái", hanzi: "收银台", category: "facility" },
+          { pinyin: "gòu wù chē", hanzi: "购物车", category: "facility" },
+          { pinyin: "gòu wù lán", hanzi: "购物篮", category: "facility" },
+          { pinyin: "píng guǒ", hanzi: "苹果", category: "item" },
+          { pinyin: "niú nǎi", hanzi: "牛奶", category: "item" },
+          { pinyin: "miàn bāo", hanzi: "面包", category: "item" },
+          { pinyin: "jī dàn", hanzi: "鸡蛋", category: "item" },
+          { pinyin: "xiāng jiāo", hanzi: "香蕉", category: "item" },
+          { pinyin: "bái cài", hanzi: "白菜", category: "item" },
+          { pinyin: "ròu", hanzi: "肉", category: "item" },
+          { pinyin: "yú", hanzi: "鱼", category: "item" },
+          { pinyin: "tiáo xíng mǎ", hanzi: "条形码", category: "item" },
+          { pinyin: "chē lún", hanzi: "车轮", category: "item" },
+          { pinyin: "jià gé biāo qiān", hanzi: "价格标签", category: "environment" },
+          { pinyin: "chū kǒu", hanzi: "出口", category: "environment" },
+          { pinyin: "rù kǒu", hanzi: "入口", category: "environment" },
+          { pinyin: "lěng dòng qū", hanzi: "冷冻区", category: "environment" }
+        ]
+      },
+      "医院": {
+        name: "医院",
+        words: [
+          { pinyin: "yī shēng", hanzi: "医生", category: "role" },
+          { pinyin: "hù shi", hanzi: "护士", category: "role" },
+          { pinyin: "bìng rén", hanzi: "病人", category: "role" },
+          { pinyin: "chuáng", hanzi: "病床", category: "facility" },
+          { pinyin: "guà hào chù", hanzi: "挂号处", category: "facility" },
+          { pinyin: "yào", hanzi: "药", category: "item" },
+          { pinyin: "tǐ wēn jì", hanzi: "体温计", category: "item" },
+          { pinyin: "xiě yā jì", hanzi: "血压计", category: "item" },
+          { pinyin: "kǒu zhào", hanzi: "口罩", category: "item" },
+          { pinyin: "bào gào dān", hanzi: "报告单", category: "item" },
+          { pinyin: "bìng lì", hanzi: "病历", category: "item" },
+          { pinyin: "zhěn suǒ", hanzi: "诊所", category: "environment" },
+          { pinyin: "hòu zhěn qū", hanzi: "候诊区", category: "environment" },
+          { pinyin: "shǒu shù shì", hanzi: "手术室", category: "environment" },
+          { pinyin: "jiù hù chē", hanzi: "救护车", category: "vehicle" },
+          { pinyin: "bái大褂", hanzi: "白大褂", category: "item" },
+          { pinyin: "dǎ zhēn", hanzi: "打针", category: "action" },
+          { pinyin: "chī yào", hanzi: "吃药", category: "action" }
+        ]
+      },
+      "公园": {
+        name: "公园",
+        words: [
+          { pinyin: "pá tī", hanzi: "爬梯", category: "facility" },
+          { pinyin: "qiū qiān", hanzi: "秋千", category: "facility" },
+          { pinyin: "shā kēng", hanzi: "沙坑", category: "facility" },
+          { pinyin: "huá tī", hanzi: "滑梯", category: "facility" },
+          { pinyin: "xuán zhuǎn mù", hanzi: "旋转木", category: "facility" },
+          { pinyin: "huā", hanzi: "花", category: "nature" },
+          { pinyin: "cǎo", hanzi: "草", category: "nature" },
+          { pinyin: "shù", hanzi: "树", category: "nature" },
+          { pinyin: "cháng yǐ", hanzi: "长椅", category: "facility" },
+          { pinyin: "lù dēng", hanzi: "路灯", category: "facility" },
+          { pinyin: "xiǎo péng yǒu", hanzi: "小朋友", category: "role" },
+          { pinyin: "fēng zheng", hanzi: "风筝", category: "item" },
+          { pinyin: "qì qiú", hanzi: "气球", category: "item" },
+          { pinyin: "gē zi", hanzi: "鸽子", category: "animal" },
+          { pinyin: "sōng shǔ", hanzi: "松鼠", category: "animal" },
+          { pinyin: "hú dié", hanzi: "蝴蝶", category: "animal" },
+          { pinyin: "xiǎo hé", hanzi: "小河", category: "nature" },
+          { pinyin: "gōng lù", hanzi: "公路", category: "environment" },
+          { pinyin: "guǒ zhēn", hanzi: "果仁", category: "item" }
+        ]
+      },
+      "学校": {
+        name: "学校",
+        words: [
+          { pinyin: "lǎo shī", hanzi: "老师", category: "role" },
+          { pinyin: "xué shēng", hanzi: "学生", category: "role" },
+          { pinyin: "tóng zhuō", hanzi: "同桌", category: "role" },
+          { pinyin: "jiào shì", hanzi: "教室", category: "environment" },
+          { pinyin: "cāo chǎng", hanzi: "操场", category: "environment" },
+          { pinyin: "tú shū guǎn", hanzi: "图书馆", category: "environment" },
+          { pinyin: "hēi bǎn", hanzi: "黑板", category: "item" },
+          { pinyin: "kè zhuō", hanzi: "课桌", category: "item" },
+          { pinyin: "yǐ zi", hanzi: "椅子", category: "item" },
+          { pinyin: "shū bāo", hanzi: "书包", category: "item" },
+          { pinyin: "bǐ", hanzi: "笔", category: "item" },
+          { pinyin: "xiě zì běn", hanzi: "写字本", category: "item" },
+          { pinyin: "guó qí", hanzi: "国旗", category: "item" },
+          { pinyin: "zuò yè", hanzi: "作业", category: "item" },
+          { pinyin: "fàn chē", hanzi: "饭车", category: "item" },
+          { pinyin: "jiǎng tái", hanzi: "讲台", category: "facility" },
+          { pinyin: "láng dú", hanzi: "朗读", category: "action" },
+          { pinyin: "xiě zì", hanzi: "写字", category: "action" },
+          { pinyin: "tiào shéng", hanzi: "跳绳", category: "item" }
+        ]
+      },
+      "餐厅": {
+        name: "餐厅",
+        words: [
+          { pinyin: "fú wù yuán", hanzi: "服务员", category: "role" },
+          { pinyin: "chú shī", hanzi: "厨师", category: "role" },
+          { pinyin: "gù kè", hanzi: "顾客", category: "role" },
+          { pinyin: "cān zhuō", hanzi: "餐桌", category: "facility" },
+          { pinyin: "yǐ zi", hanzi: "椅子", category: "facility" },
+          { pinyin: "cài dān", hanzi: "菜单", category: "item" },
+          { pinyin: "wǎn", hanzi: "碗", category: "item" },
+          { pinyin: "kuài zǐ", hanzi: "筷子", category: "item" },
+          { pinyin: "sháo zi", hanzi: "勺子", category: "item" },
+          { pinyin: "bēi zi", hanzi: "杯子", category: "item" },
+          { pinyin: "fàn", hanzi: "饭", category: "food" },
+          { pinyin: "cài", hanzi: "菜", category: "food" },
+          { pinyin: "tāng", hanzi: "汤", category: "food" },
+          { pinyin: "mǐ fàn", hanzi: "米饭", category: "food" },
+          { pinyin: "miàn tiáo", hanzi: "面条", category: "food" },
+          { pinyin: "shuǐ guǒ pán", hanzi: "水果盘", category: "item" },
+          { pinyin: "zhào dān", hanzi: "账单", category: "item" },
+          { pinyin: "chú fáng", hanzi: "厨房", category: "environment" },
+          { pinyin: "huǒ zào", hanzi: "火灶", category: "facility" }
+        ]
+      },
+      "游乐场": {
+        name: "游乐场",
+        words: [
+          { pinyin: "mó tiān lún", hanzi: "摩天轮", category: "facility" },
+          { pinyin: "xuán zhuǎn mù mǎ", hanzi: "旋转木马", category: "facility" },
+          { pinyin: "guò shān chē", hanzi: "过山车", category: "facility" },
+          { pinyin: "xuán zhuǎn bēi", hanzi: "旋转杯", category: "facility" },
+          { pinyin: "kuài lè chē", hanzi: "快乐车", category: "facility" },
+          { pinyin: "bīng qí lín", hanzi: "冰淇淋", category: "food" },
+          { pinyin: "qì qiú", hanzi: "气球", category: "item" },
+          { pinyin: "bào zhǎng", hanzi: "爆米花", category: "food" },
+          { pinyin: "táng guǒ", hanzi: "糖果", category: "food" },
+          { pinyin: "hóu zi", hanzi: "猴子", category: "animal" },
+          { pinyin: "xióng māo", hanzi: "熊猫", category: "animal" },
+          { pinyin: "xiǎo péng yǒu", hanzi: "小朋友", category: "role" },
+          { pinyin: "bà ba", hanzi: "爸爸", category: "role" },
+          { pinyin: "mā ma", hanzi: "妈妈", category: "role" },
+          { pinyin: "piào", hanzi: "票", category: "item" },
+          { pinyin: "mén piào", hanzi: "门票", category: "item" },
+          { pinyin: "dēng guāng", hanzi: "灯光", category: "environment" },
+          { pinyin: "yín mù", hanzi: "银幕", category: "facility" },
+          { pinyin: "zhào xiàng jī", hanzi: "照相机", category: "item" }
+        ]
+      }
+    };
+
+    // Default vocabulary for custom themes
+    const DEFAULT_VOCABULARY = [
+      { pinyin: "xiǎo péng yǒu", hanzi: "小朋友", category: "role" },
+      { pinyin: "lǎo shī", hanzi: "老师", category: "role" },
+      { pinyin: "bà ba", hanzi: "爸爸", category: "role" },
+      { pinyin: "mā ma", hanzi: "妈妈", category: "role" },
+      { pinyin: "fáng zi", hanzi: "房子", category: "item" },
+      { pinyin: "mén", hanzi: "门", category: "item" },
+      { pinyin: "chuāng", hanzi: "窗", category: "item" },
+      { pinyin: "zhuō zi", hanzi: "桌子", category: "item" },
+      { pinyin: "yǐ zi", hanzi: "椅子", category: "item" },
+      { pinyin: "shù", hanzi: "树", category: "nature" },
+      { pinyin: "huā", hanzi: "花", category: "nature" },
+      { pinyin: "cǎo", hanzi: "草", category: "nature" },
+      { pinyin: "tài yáng", hanzi: "太阳", category: "nature" },
+      { pinyin: "yuè liang", hanzi: "月亮", category: "nature" },
+      { pinyin: "xīng xing", hanzi: "星星", category: "nature" },
+      { pinyin: "niǎo", hanzi: "鸟", category: "animal" },
+      { pinyin: "gǒu", hanzi: "狗", category: "animal" },
+      { pinyin: "māo", hanzi: "猫", category: "animal" }
+    ];
+
+    // State
+    let currentTheme = '';
+    let currentVocabulary = [];
+    let currentTaskId = null;
+    let currentImageUrl = null;
+
+    // DOM Elements
+    const apiKeyInput = document.getElementById('apiKey');
+    const themeSelect = document.getElementById('themeSelect');
+    const themeCustom = document.getElementById('themeCustom');
+    const titleInput = document.getElementById('titleInput');
+    const vocabPreview = document.getElementById('vocabPreview');
+    const vocabTags = document.getElementById('vocabTags');
+    const vocabCount = document.getElementById('vocabCount');
+    const promptPreview = document.getElementById('promptPreview');
+    const promptText = document.getElementById('promptText');
+    const generateBtn = document.getElementById('generateBtn');
+    const inputForm = document.getElementById('inputForm');
+    const loadingSection = document.getElementById('loadingSection');
+    const loadingProgress = document.getElementById('loadingProgress');
+    const errorSection = document.getElementById('errorSection');
+    const resultSection = document.getElementById('resultSection');
+    const resultImage = document.getElementById('resultImage');
+
+    // Toggle API Key Section
+    function toggleApiKey() {
+      const content = document.getElementById('apiKeyContent');
+      const toggle = document.getElementById('apiKeyToggle');
+      content.classList.toggle('hidden');
+      toggle.classList.toggle('collapsed');
+    }
+
+    // Theme Change Handler
+    function onThemeChange() {
+      const value = themeSelect.value;
+
+      if (value === 'custom') {
+        themeCustom.classList.remove('hidden');
+        themeCustom.focus();
+        currentTheme = themeCustom.value || '自定义场景';
+      } else {
+        themeCustom.classList.add('hidden');
+        currentTheme = value;
+      }
+
+      updateVocabularyPreview();
+    }
+
+    // Update Vocabulary Preview
+    function updateVocabularyPreview() {
+      if (!currentTheme) {
+        vocabPreview.classList.add('hidden');
+        promptPreview.classList.add('hidden');
+        return;
+      }
+
+      // Get vocabulary
+      if (VOCABULARY_DATABASE[currentTheme]) {
+        currentVocabulary = VOCABULARY_DATABASE[currentTheme].words;
+      } else {
+        currentVocabulary = DEFAULT_VOCABULARY;
+      }
+
+      // Render tags
+      vocabTags.innerHTML = '';
+      currentVocabulary.forEach(word => {
+        const tag = document.createElement('span');
+        tag.className = 'vocab-tag';
+        tag.innerHTML = `
+          <span class="pinyin">${word.pinyin}</span>
+          <span class="hanzi">${word.hanzi}</span>
+        `;
+        vocabTags.appendChild(tag);
+      });
+
+      vocabCount.textContent = currentVocabulary.length;
+      vocabPreview.classList.remove('hidden');
+
+      // Update prompt preview
+      updatePromptPreview();
+    }
+
+    // Update Prompt Preview
+    function updatePromptPreview() {
+      const title = titleInput.value.trim() || '《标题》';
+
+      if (!currentTheme || currentVocabulary.length === 0) {
+        promptPreview.classList.add('hidden');
+        return;
+      }
+
+      const prompt = generatePrompt(currentTheme, title, currentVocabulary);
+      promptText.textContent = prompt;
+      promptPreview.classList.remove('hidden');
+    }
+
+    // Generate Prompt
+    function generatePrompt(theme, title, vocabulary) {
+      const roles = vocabulary.filter(w => w.category === 'role');
+      const items = vocabulary.filter(w => w.category === 'item' || w.category === 'food');
+      const environments = vocabulary.filter(w => w.category === 'environment' || w.category === 'nature');
+
+      const rolesList = roles.map(w => `${w.pinyin} ${w.hanzi}`).join(', ');
+      const itemsList = items.map(w => `${w.pinyin} ${w.hanzi}`).join(', ');
+      const envList = environments.map(w => `${w.pinyin} ${w.hanzi}`).join(', ');
+
+      return `请生成一张儿童识字小报《${theme}》，竖版 A4，学习小报版式，适合 5–9 岁孩子 认字与看图识物。
+
+# 一、小报标题区（顶部）
+
+**顶部居中大标题**：《${title}》
+* **风格**：十字小报 / 儿童学习报感
+* **文本要求**：大字、醒目、卡通手写体、彩色描边
+* **装饰**：周围添加与 ${theme} 相关的贴纸风装饰，颜色鲜艳
+
+# 二、小报主体（中间主画面）
+
+画面中心是一幅 **卡通插画风的「${theme}」场景**：
+* **整体气氛**：明亮、温暖、积极
+* **构图**：物体边界清晰，方便对应文字，不要过于拥挤。
+
+**场景分区与核心内容**
+1. **核心区域 A（主要对象）**：表现 ${theme} 的核心活动。
+2. **核心区域 B（配套设施）**：展示相关的工具或物品。
+3. **核心区域 C（环境背景）**：体现环境特征（如墙面、指示牌等）。
+
+**主题人物**
+* **角色**：1 位可爱卡通人物（职业/身份：与 ${theme} 匹配）。
+* **动作**：正在进行与场景相关的自然互动。
+
+# 三、必画物体与识字清单（Generated Content）
+
+**请务必在画面中清晰绘制以下物体，并为其预留贴标签的位置：**
+
+**1. 核心角色与设施：**
+${rolesList}
+
+**2. 常见物品/工具：**
+${itemsList}
+
+**3. 环境与装饰：**
+${envList}
+
+*(注意：画面中的物体数量不限于此，但以上列表必须作为重点描绘对象)*
+
+# 四、识字标注规则
+
+对上述清单中的物体，贴上中文识字标签：
+* **格式**：两行制（第一行拼音带声调，第二行简体汉字）。
+* **样式**：彩色小贴纸风格，白底黑字或深色字，清晰可读。
+* **排版**：标签靠近对应的物体，不遮挡主体。
+
+# 五、画风参数
+* **风格**：儿童绘本风 + 识字小报风
+* **色彩**：高饱和、明快、温暖 (High Saturation, Warm Tone)
+* **质量**：8k resolution, high detail, vector illustration style, clean lines.`;
+    }
+
+    // Generate Image
+    async function generateImage() {
+      const apiKey = apiKeyInput.value.trim();
+      const title = titleInput.value.trim();
+
+      if (!apiKey) {
+        showError('请输入 API Key');
+        return;
+      }
+
+      if (!currentTheme) {
+        showError('请选择或输入主题');
+        return;
+      }
+
+      if (!title) {
+        showError('请输入小报标题');
+        return;
+      }
+
+      if (currentVocabulary.length === 0) {
+        showError('词汇列表为空，请重新选择主题');
+        return;
+      }
+
+      const prompt = generatePrompt(currentTheme, title, currentVocabulary);
+
+      hideError();
+      showLoading();
+
+      try {
+        // Create task
+        const taskId = await NanoBananaAPI.createTask(apiKey, prompt);
+        currentTaskId = taskId;
+
+        // Poll for result
+        const imageUrl = await NanoBananaAPI.pollForResult(
+          apiKey,
+          taskId,
+          (progress) => {
+            loadingProgress.textContent = `第 ${progress.attempt} 次查询...`;
+          }
+        );
+
+        currentImageUrl = imageUrl;
+        showResult(imageUrl);
+
+      } catch (error) {
+        showError(error.message || '生成失败，请重试');
+        hideLoading();
+      }
+    }
+
+    // NanoBanana API
+    const NanoBananaAPI = {
+      BASE_URL: 'https://api.kie.ai/api/v1',
+
+      async createTask(apiKey, prompt) {
+        const response = await fetch(`${this.BASE_URL}/jobs/createTask`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            model: 'nano-banana-pro',
+            input: {
+              prompt: prompt,
+              aspect_ratio: '3:4',
+              resolution: '2K',
+              output_format: 'png'
+            }
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.code !== 200) {
+          throw new Error(this.getErrorMessage(data.code, data.msg));
+        }
+
+        return data.data.taskId;
+      },
+
+      async queryTaskStatus(apiKey, taskId) {
+        const response = await fetch(
+          `${this.BASE_URL}/jobs/recordInfo?taskId=${taskId}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${apiKey}`
+            }
+          }
+        );
+
+        const data = await response.json();
+
+        if (data.code !== 200) {
+          throw new Error(this.getErrorMessage(data.code, data.msg));
+        }
+
+        return {
+          state: data.data.state,
+          resultUrls: data.data.resultJson
+            ? JSON.parse(data.data.resultJson).resultUrls
+            : null,
+          failCode: data.data.failCode,
+          failMsg: data.data.failMsg
+        };
+      },
+
+      async pollForResult(apiKey, taskId, onProgress, maxAttempts = 60) {
+        let delay = 2000;
+
+        for (let i = 0; i < maxAttempts; i++) {
+          const status = await this.queryTaskStatus(apiKey, taskId);
+
+          onProgress({
+            attempt: i + 1,
+            state: status.state,
+            delay
+          });
+
+          if (status.state === 'success') {
+            return status.resultUrls[0];
+          }
+
+          if (status.state === 'fail') {
+            throw new Error(`图片生成失败: ${status.failMsg} (错误码: ${status.failCode})`);
+          }
+
+          await new Promise(resolve => setTimeout(resolve, delay));
+          delay = Math.min(delay + 1000, 10000);
+        }
+
+        throw new Error('生成超时，请重试');
+      },
+
+      getErrorMessage(code, msg) {
+        const errorMessages = {
+          400: '请求参数错误',
+          401: 'API密钥无效，请检查后重试',
+          402: '账户余额不足',
+          404: '资源不存在',
+          422: '参数验证失败',
+          429: '请求过于频繁，请稍后重试',
+          500: '服务器错误，请稍后重试'
+        };
+        return errorMessages[code] || msg || '未知错误';
+      }
+    };
+
+    // UI State Management
+    function showLoading() {
+      inputForm.classList.add('hidden');
+      loadingSection.classList.remove('hidden');
+      errorSection.classList.add('hidden');
+      resultSection.classList.add('hidden');
+      loadingProgress.textContent = '正在创建任务...';
+    }
+
+    function hideLoading() {
+      loadingSection.classList.add('hidden');
+    }
+
+    function showError(message) {
+      errorSection.textContent = message;
+      errorSection.classList.remove('hidden');
+    }
+
+    function hideError() {
+      errorSection.classList.add('hidden');
+    }
+
+    function showResult(imageUrl) {
+      hideLoading();
+      inputForm.classList.add('hidden');
+      resultImage.src = imageUrl;
+      resultSection.classList.remove('hidden');
+    }
+
+    function resetForm() {
+      currentTaskId = null;
+      currentImageUrl = null;
+      hideError();
+      hideLoading();
+      inputForm.classList.remove('hidden');
+      resultSection.classList.add('hidden');
+    }
+
+    // Download Image
+    function downloadImage() {
+      if (!currentImageUrl) return;
+
+      const link = document.createElement('a');
+      link.href = currentImageUrl;
+      link.download = `儿童识字小报_${currentTheme}_${Date.now()}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // Listen for custom theme input
+    themeCustom.addEventListener('input', () => {
+      currentTheme = themeCustom.value || '自定义场景';
+      updateVocabularyPreview();
+    });
+
+    // Listen for title input changes
+    titleInput.addEventListener('input', updatePromptPreview);
+
+    // Load saved API key from localStorage
+    const savedApiKey = localStorage.getItem('nanoBananaApiKey');
+    if (savedApiKey) {
+      apiKeyInput.value = savedApiKey;
+    }
+
+    // Save API key on change
+    apiKeyInput.addEventListener('change', () => {
+      if (apiKeyInput.value.trim()) {
+        localStorage.setItem('nanoBananaApiKey', apiKeyInput.value.trim());
+      }
+    });
+  </script>
+</body>
+</html>
